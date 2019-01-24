@@ -1,7 +1,7 @@
 subscribers:
 
   camera_reading:
-    topic: /camera/rgb/image_raw
+    topic: /head_xtion/rgb/image_color
     queue_size: 1
 
 actions:
@@ -28,6 +28,7 @@ publishers:
 
 image_view:
 
+  display_detected_image: false
   enable_opencv: true
   wait_key_delay: 1
   enable_console_output: true

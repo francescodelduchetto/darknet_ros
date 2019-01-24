@@ -59,7 +59,7 @@ extern "C" {
 
 extern "C" void ipl_into_image(IplImage* src, image im);
 extern "C" image ipl_to_image(IplImage* src);
-extern "C" void show_image_cv(image p, const char *name, IplImage *disp);
+extern "C" void show_image_cv(image p, const char *name, IplImage *disp, bool displayDetectedImage);
 
 namespace darknet_ros {
 
@@ -198,6 +198,7 @@ class YoloObjectDetector
   bool viewImage_;
   bool enableConsoleOutput_;
   int waitKeyDelay_;
+  bool displayDetectedImage_;
   int fullScreen_;
   char *demoPrefix_;
 
@@ -242,6 +243,8 @@ class YoloObjectDetector
   IplImageWithHeader_ getIplImageWithHeader();
 
   bool getImageStatus(void);
+
+  IplImage* getIplImage();
 
   bool isNodeRunning(void);
 
