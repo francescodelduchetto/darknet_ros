@@ -15,7 +15,7 @@ class PeopleDetectionsIn3DPose():
         rospy.Subscriber(bboxes_topic, BoundingBoxes, self.bounding_boxes_cb)
         rospy.Subscriber(camera_info_topic, CameraInfo, self.K_cb)
 
-        poseArray_pub = rospy.Publisher(poses_topic, PoseArray, queue_size=1)
+        self.poseArray_pub = rospy.Publisher(poses_topic, PoseArray, queue_size=1)
 
         self.cv_bridge = CvBridge()
         self.last_image = None
@@ -23,7 +23,7 @@ class PeopleDetectionsIn3DPose():
         print "initialized"
 
     def bounding_boxes_cb(self, msg):
-        print "bboxes cb"
+        #print "bboxes cb"
         if self.last_image is None:
             rospy.logwarn("Bounding boxes received, but no rgb image yet!")
             return
@@ -35,6 +35,8 @@ class PeopleDetectionsIn3DPose():
         # centers_2d = []
         # median_distances = []
         pose_array = PoseArray()
+        pose_array.header.stamp = rospy.Time.now()
+        pose_array.header.frame_id = "head_xtion_rgb_optical_frame"
         bbs = msg.bounding_boxes
         for bb in bbs:
             if bb.Class != "person":
@@ -42,7 +44,7 @@ class PeopleDetectionsIn3DPose():
 
             # get depth bboxes
             crop = self.get_depth_bbox(bb.xmin, bb.ymin, bb.xmax, bb.ymax)
-            if crop:
+            if len(crop):
                 # cropped_imgs.append(crop)
 
                 # get bbox center
@@ -65,11 +67,12 @@ class PeopleDetectionsIn3DPose():
                 pose.position.x = md_dist * ((center_x - self.K[2]) / self.K[0])
                 pose.position.y = md_dist * ((center_y - self.K[5]) / self.K[4])
                 pose.position.z = md_dist
+                pose.orientation.w = 1.
 
                 pose_array.poses.append(pose)
 
-        if len(pose_array.poses) > 0:
-            self.publish_poses(pose_array)
+       # if len(pose_array.poses) > 0:
+        self.publish_poses(pose_array)
 
 
 
@@ -84,13 +87,13 @@ class PeopleDetectionsIn3DPose():
 
     def get_depth_bbox(self, xmin, ymin, xmax, ymax):
         if self.last_image is None:
-            return 0
+            return []
 
         try:
             cv_image = self.cv_bridge.imgmsg_to_cv2(self.last_image)
         except CvBridgeError as e:
             rospy.logerr("CvBridgeErr: " + e)
-            return 0
+            return []
 
         cropped_img = cv_image[ymin:ymax, xmin:xmax]
 
@@ -103,13 +106,13 @@ class PeopleDetectionsIn3DPose():
     def get_median_distance(self, img):
         # mask zero values
         masked = np.ma.masked_where(img == 0, img)
-
-        median = np.ma.median(masked).filled(0)
-
+        #print masked
+        #median = np.ma.median(masked).filled(0)
+        median = np.nanmedian(masked)
         return median
     #
-    # def publish_poses(pose_arr):
-    #     self.poseArray_pub.publish(pose_arr)
+    def publish_poses(self, pose_arr):
+        self.poseArray_pub.publish(pose_arr)
 
 
 if __name__ == '__main__':
