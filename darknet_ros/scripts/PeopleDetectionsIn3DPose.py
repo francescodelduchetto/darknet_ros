@@ -95,8 +95,8 @@ class PeopleDetectionsIn3DPose():
         cropped_img = cv_image[ymin:ymax, xmin:xmax]
 
         # show image for debug
-        cv2.imshow("cropped", cropped_img)
-        cv2.waitKey(0)
+        # cv2.imshow("cropped", cropped_img)
+        # cv2.waitKey(0)
 
         return cropped_img
 
